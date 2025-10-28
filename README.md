@@ -92,7 +92,7 @@ This framework implements a state-of-the-art approach to time series forecasting
 ### Two Forecasting Pipelines
 
 ```
-Pipeline 1: IESF → XGBoost (For Trend + Seasonal Forecasting)
+Pipeline 1: IESF → XGBoost (For Trend)
 ═══════════════════════════════════════════════════════════════
 
 Input Time Series (Wind speed)
@@ -125,7 +125,7 @@ Input Time Series (Wind speed)
     Final Predictions with R², F24, RMSE, MAE
 
 
-Pipeline 2: ICEEMDAN → BiGRU (For Multi-scale Pattern Learning)
+Pipeline 2: ICEEMDAN → BiGRU
 ═══════════════════════════════════════════════════════════════
 
 Input Time Series (speed m/s)
@@ -156,17 +156,6 @@ Input Time Series (speed m/s)
          ↓
     Final Predictions with Weighted RMSE
 ```
-
-### Key Differences
-
-| Aspect | IESF → XGBoost | ICEEMDAN → BiGRU |
-|--------|----------------|------------------|
-| **Decomposition** | Two-stage (Trend extraction + CEEMDAN) | Single-stage (Direct CEEMDAN) |
-| **Trend** | Explicitly extracted and modeled | Implicitly captured in residual |
-| **Components** | Trend + IMFs + Residual | IMFs + Residual |
-| **Model** | Tree-based ensemble | Deep neural network |
-| **Strength** | Handles trend changes well | Captures complex temporal dependencies |
-| **Use Case** | Long-term forecasting with trends | Short-to-medium term multi-scale patterns |
 
 ## 🔧 Installation
 
@@ -281,7 +270,7 @@ python BIGRU.py
 
 ## 📖 Detailed Usage
 
-### Pipeline 1: IESF → XGBoost (Recommended for Long-term Trend Forecasting)
+### Pipeline 1: IESF → XGBoost
 
 **Decomposition Strategy:**
 - IESF performs two-stage decomposition:
@@ -357,7 +346,7 @@ Results saved to: xgboost_forecasting_results_seed_42_20241028_143022/
 Finish!
 ```
 
-### Pipeline 2: ICEEMDAN → BiGRU (Recommended for Multi-component Analysis)
+### Pipeline 2: ICEEMDAN → BiGRU
 
 **Decomposition Strategy:**
 - ICEEMDAN performs direct signal decomposition into IMFs
@@ -429,18 +418,6 @@ Final weighted RMSE: 1.234
 Results saved to: BiGRU_HO_MultiDim_Sum_F24_WeightedRMSE_Results_20241028_150000/
 Finish!
 ```
-
-### Choosing the Right Pipeline
-
-| Aspect | IESF → XGBoost | ICEEMDAN → BiGRU |
-|--------|----------------|------------------|
-| **Trend Handling** | Explicit long-term trend extraction | Trend embedded in residual |
-| **Decomposition** | Two-stage (smoothing + CEEMDAN) | Single-stage (CEEMDAN only) |
-| **Model Type** | Gradient Boosting Trees | Recurrent Neural Network |
-| **Best For** | Trend + seasonal patterns | Multi-scale oscillations |
-| **Interpretability** | High (tree-based) | Medium (neural network) |
-| **Training Speed** | Fast | Slower (deep learning) |
-| **GPU Benefit** | Moderate | High |
 
 ## 🧮 Algorithm Details
 
@@ -792,4 +769,4 @@ For questions or issues, please:
 
 **Note:** This framework is designed for research purposes. For production use, additional validation and testing are recommended.
 
-**Last Updated:** October 2024
+**Last Updated:** October 2025
