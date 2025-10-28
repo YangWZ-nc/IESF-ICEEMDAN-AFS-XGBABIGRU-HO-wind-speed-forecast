@@ -1,6 +1,6 @@
 # Time Series Forecasting Framework with Signal Decomposition and Meta-heuristic Optimization
 
-A comprehensive Python framework for time series forecasting that combines advanced signal decomposition techniques (ICEEMDAN) with machine learning models (XGBoost, BiGRU) optimized by meta-heuristic algorithms (Hippopotamus Optimization).
+A comprehensive Python framework for time series forecasting that combines advanced signal decomposition techniques (ICEEMDAN, IESF) with machine learning models (XGBoost, BiGRU) optimized by meta-heuristic algorithms (Hippopotamus Optimization).
 
 ## 📋 Table of Contents
 
@@ -21,9 +21,13 @@ A comprehensive Python framework for time series forecasting that combines advan
 
 This framework implements a state-of-the-art approach to time series forecasting by:
 
-1. **Signal Decomposition**: Using Improved Complete Ensemble Empirical Mode Decomposition with Adaptive Noise (ICEEMDAN) and Improved Exponential Smoothing Filtering (IESF) to decompose complex time series into simpler components
-2. **Feature Engineering**: Extracting trends and creating predictive features from decomposed signals
-3. **Model Training**: Training XGBoost or BiGRU models on decomposed components
+1. **Two-Stage Signal Decomposition**: 
+   - **Stage 1 (IESF)**: Integrated Exponential Smoothing to extract long-term trends
+   - **Stage 2 (ICEEMDAN)**: Improved CEEMDAN to decompose detrended residuals into oscillatory components
+2. **Feature Engineering**: Creating predictive features from decomposed components
+3. **Model Training**: 
+   - **XGBoost**: Trained on IESF decomposed components (trend + CEEMDAN residuals)
+   - **BiGRU**: Trained on ICEEMDAN components for multi-dimensional temporal learning
 4. **Hyperparameter Optimization**: Using Hippopotamus Optimization (HO) algorithm for intelligent hyperparameter tuning
 5. **Multi-step Forecasting**: Predicting multiple future time steps with weighted evaluation
 
@@ -36,10 +40,13 @@ This framework implements a state-of-the-art approach to time series forecasting
 ## ✨ Key Features
 
 ### Signal Processing
+- **Two-Stage Decomposition Strategy**:
+  - **IESF (Stage 1)**: Extracts long-term trend using optimized exponential smoothing
+  - **ICEEMDAN (Stage 2)**: Decomposes detrended residuals into IMF components
 - **Reproducible CEEMDAN**: Deterministic decomposition with controlled random seeding
 - **Laplacian Noise**: Superior to Gaussian noise for time series stability
-- **Bayesian Epsilon Optimization**: Adaptive tuning of decomposition parameters
-- **Trend Extraction**: Zero-phase exponential smoothing with optimized alpha parameter
+- **Bayesian Optimization**: Adaptive tuning of both smoothing (alpha) and decomposition (epsilon) parameters
+- **Zero-Phase Trend Extraction**: Forward-backward exponential smoothing eliminates time lag
 
 ### Machine Learning Models
 - **XGBoost Regressor**: Gradient boosting with GPU acceleration support
@@ -79,6 +86,87 @@ This framework implements a state-of-the-art approach to time series forecasting
 └── Input Data
     └── *.csv                    # Your time series CSV files
 ```
+
+## 🔄 Framework Architecture
+
+### Two Forecasting Pipelines
+
+```
+Pipeline 1: IESF → XGBoost (For Trend + Seasonal Forecasting)
+═══════════════════════════════════════════════════════════════
+
+Input Time Series (Wind speed)
+         ↓
+    ┌────────────────────────────────────┐
+    │  IESF.py (Two-Stage Decomposition) │
+    └────────────────────────────────────┘
+         ↓
+    Stage 1: Exponential Smoothing
+         ├─→ Long-term Trend
+         └─→ Detrended Residuals
+         ↓
+    Stage 2: ICEEMDAN on Residuals
+         ├─→ IMF_1, IMF_2, ..., IMF_N
+         └─→ Final Residual
+         ↓
+    Output: predictive_optimized_ceemdan_decomposition_*.csv
+         ├─→ Extracted_Trend
+         ├─→ Residuals_After_Smoothing
+         ├─→ IMF_1, IMF_2, ..., IMF_N
+         └─→ CEEMDAN_Residual
+         ↓
+    ┌────────────────────────────────────┐
+    │  XGBoost.py (Gradient Boosting)    │
+    └────────────────────────────────────┘
+         ├─→ Feature Engineering
+         ├─→ HO Hyperparameter Optimization
+         └─→ Multi-step Forecasting
+         ↓
+    Final Predictions with R², F24, RMSE, MAE
+
+
+Pipeline 2: ICEEMDAN → BiGRU (For Multi-scale Pattern Learning)
+═══════════════════════════════════════════════════════════════
+
+Input Time Series (speed m/s)
+         ↓
+    ┌────────────────────────────────────┐
+    │  ICEEMDAN.py (Direct Decomposition)│
+    └────────────────────────────────────┘
+         ↓
+    Bayesian-Optimized CEEMDAN
+         ├─→ IMF_1 (High frequency)
+         ├─→ IMF_2
+         ├─→ IMF_3
+         ├─→ ...
+         ├─→ IMF_N (Low frequency)
+         └─→ Residual (Trend-like)
+         ↓
+    Output: *_CEEMDAN_Laplace_optimized_decomposition.csv
+         ├─→ Original_Signal
+         ├─→ IMF_1, IMF_2, ..., IMF_N
+         └─→ Residual
+         ↓
+    ┌────────────────────────────────────┐
+    │  BIGRU.py (Bidirectional GRU)      │
+    └────────────────────────────────────┘
+         ├─→ Multi-dimensional Input (all IMFs + Residual)
+         ├─→ HO Hyperparameter Optimization
+         └─→ Temporal Pattern Learning
+         ↓
+    Final Predictions with Weighted RMSE
+```
+
+### Key Differences
+
+| Aspect | IESF → XGBoost | ICEEMDAN → BiGRU |
+|--------|----------------|------------------|
+| **Decomposition** | Two-stage (Trend extraction + CEEMDAN) | Single-stage (Direct CEEMDAN) |
+| **Trend** | Explicitly extracted and modeled | Implicitly captured in residual |
+| **Components** | Trend + IMFs + Residual | IMFs + Residual |
+| **Model** | Tree-based ensemble | Deep neural network |
+| **Strength** | Handles trend changes well | Captures complex temporal dependencies |
+| **Use Case** | Long-term forecasting with trends | Short-to-medium term multi-scale patterns |
 
 ## 🔧 Installation
 
@@ -122,51 +210,58 @@ python -c "import numpy, pandas, xgboost, torch, PyEMD; print('All packages inst
 
 ## 🚀 Quick Start
 
-### Example 1: Signal Decomposition Only
+### Example 1: Two-Stage Signal Decomposition
 
 ```python
-# Run ICEEMDAN decomposition on CSV files
-python ICEEMDAN.py
+# Run IESF to extract long-term trend and perform initial decomposition
+python IESF.py
 
 # Expected output:
-# - Decomposed IMF components
-# - Residual signals
-# - Quality metrics
-# - Energy distribution analysis
+# - Extracted trend component
+# - Detrended residuals
+# - CEEMDAN decomposition of residuals
+# - Complete decomposition with trend + IMFs + final residual
 ```
 
 **Input Requirements:**
-- CSV file with a column named `speed(m/s)` (for ICEEMDAN.py)
-- Or `Wind speed` (for IESF.py)
+- CSV file with a column named `Wind speed` (for IESF.py)
+- Minimum 50+ data points recommended
 
-### Example 2: XGBoost Forecasting
+**What happens in IESF:**
+1. Optimizes alpha parameter for exponential smoothing
+2. Extracts zero-phase long-term trend
+3. Computes residuals after trend removal
+4. Applies ICEEMDAN to decompose residuals
+5. Outputs: Trend + IMF components + final residual
+
+### Example 2: XGBoost Forecasting (Uses IESF Output)
 
 ```python
-# 1. First, decompose your signal (run ICEEMDAN.py or IESF.py)
+# 1. First, run IESF decomposition
 python IESF.py
 
 # 2. Update the file path in XGBoost.py (line 1482)
-# file_path = "your_decomposed_data.csv"
+# file_path = "predictive_optimized_ceemdan_decomposition_XXXXXX.csv"
 
 # 3. Run XGBoost forecasting
 python XGBoost.py
 
 # The model will:
-# - Load decomposed components
+# - Load IESF decomposed components (trend + IMFs + residual)
 # - Optimize hyperparameters using HO algorithm
-# - Train XGBoost models
+# - Train XGBoost models on decomposed features
 # - Generate multi-step forecasts
 # - Save results to timestamped folder
 ```
 
-### Example 3: BiGRU Forecasting
+### Example 3: BiGRU Forecasting (Uses ICEEMDAN Output)
 
 ```python
-# 1. Ensure you have decomposed data ready
-python IESF.py
+# 1. Run ICEEMDAN for direct signal decomposition
+python ICEEMDAN.py
 
 # 2. Update the CSV path in BIGRU.py (line 29)
-# CSV_PATH = r"your_decomposed_data.csv"
+# CSV_PATH = r"your_iceemdan_decomposition.csv"
 
 # 3. Configure prediction parameters (lines 34-52)
 # LOOK_BACK = 30          # Historical window size
@@ -177,43 +272,53 @@ python IESF.py
 python BIGRU.py
 
 # The model will:
-# - Load IMF components and residuals
+# - Load ICEEMDAN IMF components and residuals
 # - Optimize BiGRU hyperparameters using HO
-# - Train bidirectional GRU networks
+# - Train bidirectional GRU networks on multi-dimensional input
 # - Generate weighted multi-step forecasts
 # - Save predictions to CSV
 ```
 
 ## 📖 Detailed Usage
 
-### Pipeline 1: ICEEMDAN → XGBoost
+### Pipeline 1: IESF → XGBoost (Recommended for Long-term Trend Forecasting)
+
+**Decomposition Strategy:**
+- IESF performs two-stage decomposition:
+  1. Extracts long-term trend using optimized exponential smoothing
+  2. Applies ICEEMDAN to detrended residuals
+- Output: Trend + IMF components + Final residual
+- Best for: Capturing both trend and cyclical patterns
 
 **Step 1: Prepare Your Data**
 ```csv
 # Example: wind_speed_data.csv
-speed(m/s)
+Wind speed
 5.2
 5.8
 6.1
 ...
 ```
 
-**Step 2: Run ICEEMDAN Decomposition**
+**Step 2: Run IESF Decomposition**
 ```bash
-python ICEEMDAN.py
+python IESF.py
 ```
 
 This generates:
-- `*_CEEMDAN_Laplace_optimized_decomposition.csv` - IMF components
-- `*_quality_metrics_optimized.csv` - Decomposition quality
-- `*_energy_distribution_optimized.csv` - Energy analysis
+- `predictive_optimized_ceemdan_decomposition_XXXXXX.csv` containing:
+  - `Original_Series`: Original time series
+  - `Extracted_Trend`: Long-term trend (from exponential smoothing)
+  - `Residuals_After_Smoothing`: Signal after trend removal
+  - `IMF_1, IMF_2, ..., IMF_N`: Oscillatory components (from CEEMDAN on residuals)
+  - `CEEMDAN_Residual`: Final residual after all decomposition
 
 **Step 3: Configure XGBoost**
 
 Edit `XGBoost.py`:
 ```python
-# Line 1482: Set your decomposed file path
-file_path = "CEEMDAN_Laplace_Optimized_Results_20241028_123456/wind_speed_data_CEEMDAN_Laplace_optimized_decomposition.csv"
+# Line 1482: Set your IESF decomposed file path
+file_path = "predictive_alpha_optimized_results_yourfile/predictive_optimized_ceemdan_decomposition_20241028_120000.csv"
 
 # Line 1486: Set random seed
 RANDOM_SEED = 42
@@ -252,22 +357,31 @@ Results saved to: xgboost_forecasting_results_seed_42_20241028_143022/
 Finish!
 ```
 
-### Pipeline 2: IESF → BiGRU
+### Pipeline 2: ICEEMDAN → BiGRU (Recommended for Multi-component Analysis)
 
-**Step 1: Run IESF for Trend Extraction**
+**Decomposition Strategy:**
+- ICEEMDAN performs direct signal decomposition into IMFs
+- No explicit trend extraction
+- Output: Multiple IMF components + Residual
+- Best for: Multi-dimensional temporal pattern learning
+
+**Step 1: Run ICEEMDAN Decomposition**
 ```bash
-python IESF.py
+python ICEEMDAN.py
 ```
 
 This creates:
-- `predictive_optimized_ceemdan_decomposition_*.csv` - With `Extracted_Trend` column
+- `*_CEEMDAN_Laplace_optimized_decomposition.csv` containing:
+  - `Original_Signal`: Original time series
+  - `IMF_1, IMF_2, ..., IMF_N`: Intrinsic Mode Functions (oscillatory components)
+  - `Residual`: Final residual (trend-like component)
 
 **Step 2: Configure BiGRU**
 
 Edit `BIGRU.py`:
 ```python
-# Line 29: Set input CSV path
-CSV_PATH = r"predictive_alpha_optimized_results_yourfile/predictive_optimized_ceemdan_decomposition_20241028_120000.csv"
+# Line 29: Set input CSV path (from ICEEMDAN)
+CSV_PATH = r"CEEMDAN_Laplace_Optimized_Results_XXXXXX/wind_speed_data_CEEMDAN_Laplace_optimized_decomposition.csv"
 
 # Line 30-31: Specify column names
 IMF_PREFIX = 'IMF_'           # Prefix for IMF columns
@@ -316,6 +430,18 @@ Results saved to: BiGRU_HO_MultiDim_Sum_F24_WeightedRMSE_Results_20241028_150000
 Finish!
 ```
 
+### Choosing the Right Pipeline
+
+| Aspect | IESF → XGBoost | ICEEMDAN → BiGRU |
+|--------|----------------|------------------|
+| **Trend Handling** | Explicit long-term trend extraction | Trend embedded in residual |
+| **Decomposition** | Two-stage (smoothing + CEEMDAN) | Single-stage (CEEMDAN only) |
+| **Model Type** | Gradient Boosting Trees | Recurrent Neural Network |
+| **Best For** | Trend + seasonal patterns | Multi-scale oscillations |
+| **Interpretability** | High (tree-based) | Medium (neural network) |
+| **Training Speed** | Fast | Slower (deep learning) |
+| **GPU Benefit** | Moderate | High |
+
 ## 🧮 Algorithm Details
 
 ### 1. ICEEMDAN (Improved Complete EEMD with Adaptive Noise)
@@ -338,17 +464,42 @@ Bayesian Optimization → CEEMDAN Decomposition → Quality Evaluation
 
 ### 2. IESF (Integrated Exponential Smoothing & CEEMDAN)
 
+**Two-Stage Decomposition Strategy:**
+
+**Stage 1: Trend Extraction**
+- Uses zero-phase exponential smoothing to extract long-term trend
+- Optimizes alpha parameter via Bayesian optimization
+- Forward-backward smoothing eliminates phase shift
+
+**Stage 2: Residual Decomposition**
+- Applies ICEEMDAN to detrended residuals
+- Decomposes oscillatory patterns into IMF components
+- Optimizes epsilon parameter for CEEMDAN
+
 **Workflow:**
 ```
-Input Signal → Optimize Alpha (smoothing parameter) → 
-Extract Trend (zero-phase) → Decompose Residuals (CEEMDAN) → 
-Evaluate Quality → Output Components
+Input Signal → 
+  ↓
+Stage 1: Optimize Alpha → Extract Trend (Exponential Smoothing) →
+  ↓
+Compute Residuals = Original - Trend →
+  ↓
+Stage 2: Optimize Epsilon → ICEEMDAN Decomposition of Residuals →
+  ↓
+Output: Trend + IMF₁ + IMF₂ + ... + IMFₙ + Final Residual
 ```
 
 **Key Features:**
 - Zero-phase trend extraction (no time lag)
 - Joint optimization of smoothing and decomposition parameters
 - Predictive error proxy for quality assessment
+- Separates long-term trend from short-term oscillations
+
+**Why Two Stages?**
+- **Better Separation**: Trend and oscillations separated explicitly
+- **Improved Stationarity**: CEEMDAN works better on detrended data
+- **Interpretability**: Clear distinction between trend and cyclical components
+- **Forecasting Performance**: Each component type can be modeled appropriately
 
 ### 3. Hippopotamus Optimization (HO)
 
@@ -384,7 +535,7 @@ Final_Score = w₁·F24₁ + w₂·F24₂ + w₃·F24₃
 # Default weights: [5, 3, 2] (closer predictions weighted higher)
 ```
 
-## ⚙️ Configuration
+## ⚙️ Configuration (Only example, the configurations are not same for different seasons)
 
 ### XGBoost Configuration
 
@@ -545,9 +696,10 @@ print(xgb.get_config()['use_rmm'])
 **6. "No CSV files found" error**
 - Ensure CSV files are in the same directory as the Python scripts
 - Check column names match expected format:
-  - ICEEMDAN.py expects: `speed(m/s)`
   - IESF.py expects: `Wind speed`
-  - XGBoost/BiGRU expect decomposed files from previous steps
+  - ICEEMDAN.py expects: `speed(m/s)`
+  - XGBoost.py expects: IESF output (`predictive_optimized_ceemdan_decomposition_*.csv`)
+  - BiGRU.py expects: ICEEMDAN output (`*_CEEMDAN_Laplace_optimized_decomposition.csv`)
 
 **7. Results are not reproducible**
 - Ensure you set the same random seed across runs
