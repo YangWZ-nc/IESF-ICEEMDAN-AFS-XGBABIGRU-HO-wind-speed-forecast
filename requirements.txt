@@ -1,0 +1,49 @@
+# Core numerical and data processing libraries
+numpy>=1.21.0
+pandas>=1.3.0
+scipy>=1.7.0
+
+# Machine Learning frameworks
+scikit-learn>=1.0.0
+xgboost>=1.5.0
+
+# Deep Learning
+torch>=1.10.0
+torchvision>=0.11.0
+torchaudio>=0.10.0
+
+# GPU acceleration (optional but used in your code)
+cupy-cuda11x>=10.0.0  # Use cupy-cuda12x for CUDA 12.x or cupy-cuda11x for CUDA 11.x
+
+# Time series decomposition
+PyEMD>=1.3.0
+
+# Bayesian optimization (used in ICEEMDAN and IESF)
+scikit-optimize>=0.9.0
+
+# Statistical modeling
+statsmodels>=0.13.0
+
+# Visualization
+matplotlib>=3.4.0
+
+# Utilities
+packaging>=21.0
+
+# Note: If you don't have a NVIDIA GPU or don't need GPU acceleration,
+# you can comment out the cupy line and the code will fall back to CPU implementations.
+
+# Installation instructions:
+# 1. For basic installation without GPU support:
+#    pip install -r requirements.txt --ignore-installed cupy-cuda11x
+#
+# 2. For GPU support, first check your CUDA version with: nvcc --version
+#    Then install the appropriate cupy version:
+#    - For CUDA 11.x: pip install cupy-cuda11x
+#    - For CUDA 12.x: pip install cupy-cuda12x
+#
+# 3. If PyTorch GPU is needed, install from official website:
+#    Visit https://pytorch.org/get-started/locally/ and follow instructions
+#
+# 4. Some packages like scikit-optimize might require additional dependencies.
+#    If you encounter issues, try: pip install scikit-optimize[plots]
