@@ -26,7 +26,7 @@ This framework implements a state-of-the-art approach to time series forecasting
    - **Stage 2 (ICEEMDAN)**: Improved CEEMDAN to decompose detrended residuals into oscillatory components
 2. **Feature Engineering**: Creating predictive features from decomposed components
 3. **Model Training**: 
-   - **XGBoost**: Trained on IESF decomposed components (trend + CEEMDAN residuals)
+   - **XGBoost**: Trained on trend components
    - **BiGRU**: Trained on ICEEMDAN components for multi-dimensional temporal learning
 4. **Hyperparameter Optimization**: Using Hippopotamus Optimization (HO) algorithm for intelligent hyperparameter tuning
 5. **Multi-step Forecasting**: Predicting multiple future time steps with weighted evaluation
