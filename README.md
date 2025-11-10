@@ -763,7 +763,7 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 For questions or issues, please:
 1. Check the [Troubleshooting](#troubleshooting) section
 2. Review existing issues on GitHub
-3. Contact: [your.email@example.com]
+3. Contact: [zhixinyangnc@yahoo.com]
 
 ---
 
